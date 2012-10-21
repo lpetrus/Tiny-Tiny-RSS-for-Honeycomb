@@ -10,7 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
-import org.fox.ttrss.MainActivity;
+import org.fox.ttrss.OnlineActivity;
 import org.fox.ttrss.R;
 import org.fox.ttrss.offline.OfflineDownloadService;
 
@@ -20,16 +20,18 @@ import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
 
 public class ImageCacheService extends IntentService {
 
+	@SuppressWarnings("unused")
 	private final String TAG = this.getClass().getSimpleName();
 
 	public static final int NOTIFY_DOWNLOADING = 1;
 	
-	private static final String CACHE_PATH = "/data/org.fox.ttrss/image-cache/";
+	private static final String CACHE_PATH = "/image-cache/";
 
 	private int m_imagesDownloaded = 0;
 	
@@ -56,29 +58,29 @@ public class ImageCacheService extends IntentService {
 		m_nmgr = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 	}
 
-	public static boolean isUrlCached(String url) {
+	public static boolean isUrlCached(Context context, String url) {
 		String hashedUrl = md5(url);
 		
-		File storage = Environment.getExternalStorageDirectory();
+		File storage = context.getExternalCacheDir();
 		
 		File file = new File(storage.getAbsolutePath() + CACHE_PATH + "/" + hashedUrl + ".png");
 		
 		return file.exists();
 	}
 
-	public static String getCacheFileName(String url) {
+	public static String getCacheFileName(Context context, String url) {
 		String hashedUrl = md5(url);
 		
-		File storage = Environment.getExternalStorageDirectory();
+		File storage = context.getExternalCacheDir();
 		
 		File file = new File(storage.getAbsolutePath() + CACHE_PATH + "/" + hashedUrl + ".png");
 		
 		return file.getAbsolutePath();
 	}
 	
-	public static void cleanupCache(boolean deleteAll) {
+	public static void cleanupCache(Context context, boolean deleteAll) {
 		if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-			File storage = Environment.getExternalStorageDirectory();
+			File storage = context.getExternalCacheDir();
 			File cachePath = new File(storage.getAbsolutePath() + CACHE_PATH);
 		
 			long now = new Date().getTime();
@@ -123,12 +125,13 @@ public class ImageCacheService extends IntentService {
 	    }
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void updateNotification(String msg) {
 		Notification notification = new Notification(R.drawable.icon, 
 				getString(R.string.notify_downloading_title), System.currentTimeMillis());
 		
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), 0);
+                new Intent(this, OnlineActivity.class), 0);
 		
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		notification.flags |= Notification.FLAG_ONLY_ALERT_ONCE;
@@ -153,7 +156,7 @@ public class ImageCacheService extends IntentService {
 		
 		String hashedUrl = md5(url);
 		
-		File storage = Environment.getExternalStorageDirectory();
+		File storage = getExternalCacheDir();
 		File cachePath = new File(storage.getAbsolutePath() + CACHE_PATH);
 		if (!cachePath.exists()) cachePath.mkdirs();
 		

@@ -5,29 +5,27 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import org.fox.ttrss.types.Article;
 import org.fox.ttrss.types.Feed;
 import org.fox.ttrss.types.FeedCategory;
 import org.fox.ttrss.types.FeedList;
-import org.fox.ttrss.util.EasySSLSocketFactory;
 
 import android.app.Activity;
 import android.content.Context;
@@ -37,14 +35,17 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -65,10 +66,10 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 	private SharedPreferences m_prefs;
 	private FeedListAdapter m_adapter;
 	private FeedList m_feeds = new FeedList();
-	private OnlineServices m_onlineServices;
+	private FeedsActivity m_activity;
 	private Feed m_selectedFeed;
 	private FeedCategory m_activeCategory;
-	private static final String ICON_PATH = "/data/org.fox.ttrss/icons/";
+	private static final String ICON_PATH = "/icons/";
 	private boolean m_enableFeedIcons;
 	private boolean m_feedIconsChecked = false;
 	
@@ -98,10 +99,16 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 
 		@Override
 		public int compare(Feed a, Feed b) {
-			if (a.id >= 0 && b.id >= 0)
+			if (a.is_cat && b.is_cat)
+				return a.title.compareTo(b.title);
+			else if (a.is_cat && !b.is_cat)
+				return -1;
+			else if (!a.is_cat && b.is_cat)
+				return 1;
+			else if (a.id >= 0 && b.id >= 0)
 				return a.title.compareTo(b.title);
 			else
-				return a.id - b.id;
+				return a.id - b.id;			
 		}
 		
 	}
@@ -109,9 +116,15 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 	class FeedOrderComparator implements Comparator<Feed> {
 
 		@Override
-		public int compare(Feed a, Feed b) {
+		public int compare(Feed a, Feed b) {			
 			if (a.id >= 0 && b.id >= 0)
-				if (a.order_id != 0 && b.order_id != 0)
+				if (a.is_cat && b.is_cat)
+					return a.title.compareTo(b.title);
+				else if (a.is_cat && !b.is_cat)
+					return -1;
+				else if (!a.is_cat && b.is_cat) 
+					return 1;
+				else if (a.order_id != 0 && b.order_id != 0)
 					return a.order_id - b.order_id;
 				else
 					return a.title.compareTo(b.title);
@@ -119,6 +132,50 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 				return a.id - b.id;
 		}
 		
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
+				.getMenuInfo();
+		switch (item.getItemId()) {
+		case R.id.browse_articles:
+			if (true) {
+				Feed feed = getFeedAtPosition(info.position);
+				if (feed != null) {
+					m_activity.openFeedArticles(feed);
+				}
+			}
+			return true;		
+		case R.id.browse_headlines:
+			if (true) {
+				Feed feed = getFeedAtPosition(info.position);
+				if (feed != null) {
+					m_activity.onFeedSelected(feed);
+				}
+			}
+			return true;
+		case R.id.browse_feeds:
+			if (true) {
+				Feed feed = getFeedAtPosition(info.position);
+				if (feed != null) {
+					m_activity.onCatSelected(new FeedCategory(feed.id, feed.title, feed.unread), false);
+				}
+			}
+			return true;
+		case R.id.catchup_feed:
+			if (true) {
+				Feed feed = getFeedAtPosition(info.position);
+				if (feed != null) {
+					m_activity.catchupFeed(feed);
+				}
+			}
+			return true;
+		
+		default:
+			Log.d(TAG, "onContextItemSelected, unhandled id=" + item.getItemId());
+			return super.onContextItemSelected(item);
+		}
 	}
 
 	@Override
@@ -133,6 +190,14 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		if (feed != null) 
 			menu.setHeaderTitle(feed.title);
 
+		if (!m_activity.isSmallScreen()) {
+			menu.findItem(R.id.browse_articles).setVisible(false);
+		}
+		
+		if (!feed.is_cat) {
+			menu.findItem(R.id.browse_feeds).setVisible(false);
+		}
+		
 		super.onCreateContextMenu(menu, v, menuInfo);		
 		
 	}
@@ -159,11 +224,6 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		
 		m_enableFeedIcons = m_prefs.getBoolean("download_feed_icons", false);
 		
-		if (m_feeds == null || m_feeds.size() == 0)
-			refresh(false);
-		else
-			getActivity().setProgressBarIndeterminateVisibility(false);
-		
 		return view;    	
 	}
 
@@ -179,11 +239,18 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		m_prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 		m_prefs.registerOnSharedPreferenceChangeListener(this);
 		
-		m_onlineServices = (OnlineServices)activity;
-		
-		//m_selectedFeed = m_onlineServices.getActiveFeed();
+		m_activity = (FeedsActivity)activity;
 	}
 
+	@Override
+	public void onResume() {
+		super.onResume();
+		
+		refresh(false);
+		
+		m_activity.initMenu();
+	}
+	
 	@Override
 	public void onSaveInstanceState (Bundle out) {
 		super.onSaveInstanceState(out);
@@ -200,9 +267,25 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		
 		if (list != null) {
 			Feed feed = (Feed)list.getItemAtPosition(position);
-			m_onlineServices.onFeedSelected(feed);
 			
-			if (!m_onlineServices.isSmallScreen())
+			if (feed.is_cat) {
+				if (m_activity.isSmallScreen() && "ARTICLES".equals(m_prefs.getString("default_view_mode", "HEADLINES")) &&
+						m_prefs.getBoolean("browse_cats_like_feeds", false)) {
+					
+					m_activity.openFeedArticles(feed);
+					
+				} else {
+					m_activity.onCatSelected(new FeedCategory(feed.id, feed.title, feed.unread));
+				}
+			} else {
+				if ("ARTICLES".equals(m_prefs.getString("default_view_mode", "HEADLINES"))) {
+					m_activity.openFeedArticles(feed);
+				} else {
+					m_activity.onFeedSelected(feed);
+				}
+			}
+			
+			if (!m_activity.isSmallScreen())
 				m_selectedFeed = feed;
 			
 			m_adapter.notifyDataSetChanged();
@@ -213,26 +296,23 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 	public void refresh(boolean background) {
 		//FeedCategory cat = m_onlineServices.getActiveCategory();
 
+		m_activity.setProgressBarVisibility(true);
+		
 		final int catId = (m_activeCategory != null) ? m_activeCategory.id : -4;
 		
-		final String sessionId = m_onlineServices.getSessionId();
-		final boolean unreadOnly = m_onlineServices.getUnreadOnly();
+		final String sessionId = m_activity.getSessionId();
+		final boolean unreadOnly = m_activity.getUnreadOnly();
 
 		FeedsRequest req = new FeedsRequest(getActivity().getApplicationContext(), catId);
 		
 		if (sessionId != null) {
-			
-			getActivity().runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					setLoadingStatus(R.string.blank, true);
-				}
-			});
+			m_activity.setLoadingStatus(R.string.blank, true);
 			
 			HashMap<String,String> map = new HashMap<String,String>() {
 				{
 					put("op", "getFeeds");
 					put("sid", sessionId);
+					put("include_nested", "true");
 					put("cat_id", String.valueOf(catId));
 					if (unreadOnly) {
 						put("unread_only", String.valueOf(unreadOnly));
@@ -245,7 +325,7 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		}
 	}
 	
-	private void setLoadingStatus(int status, boolean showProgress) {
+	/* private void setLoadingStatus(int status, boolean showProgress) {
 		if (getView() != null) {
 			TextView tv = (TextView)getView().findViewById(R.id.loading_message);
 			
@@ -256,13 +336,15 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		
 		if (getActivity() != null)
 			getActivity().setProgressBarIndeterminateVisibility(showProgress);
-	}
+	} */
 	
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void getFeedIcons() {
 		
 		ApiRequest req = new ApiRequest(getActivity().getApplicationContext()) {
 			protected void onPostExecute(JsonElement result) {
+				if (isDetached()) return;
+				
 				if (result != null) {
 
 					try {
@@ -292,7 +374,7 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 			}
 		};
 		
-		final String sessionId = m_onlineServices.getSessionId();
+		final String sessionId = m_activity.getSessionId();
 		
 		HashMap<String,String> map = new HashMap<String,String>() {
 			{
@@ -312,7 +394,17 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 			m_catId = catId;
 		}
 		
+		@Override
+		protected void onProgressUpdate(Integer... progress) {
+			m_activity.setProgress(Math.round((((float)progress[0] / (float)progress[1]) * 10000)));
+		}
+
+		@Override
 		protected void onPostExecute(JsonElement result) {
+			if (isDetached()) return;
+			
+			m_activity.setProgressBarVisibility(false);
+
 			if (result != null) {
 				try {			
 					JsonArray content = result.getAsJsonArray();
@@ -329,10 +421,11 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 						
 						sortFeeds();
 						
-						if (m_feeds.size() == 0)
+						/*if (m_feeds.size() == 0)
 							setLoadingStatus(R.string.no_feeds_to_display, false);
-						else
-							setLoadingStatus(R.string.blank, false);
+						else */
+						
+						m_activity.setLoadingStatus(R.string.blank, false);
 
 						if (m_enableFeedIcons && !m_feedIconsChecked && 
 								Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) 
@@ -347,9 +440,9 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 			}
 
 			if (m_lastError == ApiError.LOGIN_FAILED) {
-				m_onlineServices.login();
+				m_activity.login(true);
 			} else {
-				setLoadingStatus(getErrorMessage(), false);
+				m_activity.setLoadingStatus(getErrorMessage(), false);
 			}
 	    }
 	}
@@ -375,7 +468,7 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		public int getItemViewType(int position) {
 			Feed feed = items.get(position);
 			
-			if (!m_onlineServices.isSmallScreen() && m_selectedFeed != null && feed.id == m_selectedFeed.id) {
+			if (!m_activity.isSmallScreen() && m_selectedFeed != null && feed.id == m_selectedFeed.id) {
 				return VIEW_SELECTED;
 			} else {
 				return VIEW_NORMAL;				
@@ -421,7 +514,7 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 				
 				if (m_enableFeedIcons) {
 					
-					File storage = Environment.getExternalStorageDirectory();
+					File storage = m_activity.getExternalCacheDir();
 					
 					File iconFile = new  File(storage.getAbsolutePath() + ICON_PATH + feed.id + ".ico");
 					if (iconFile.exists()) {
@@ -449,7 +542,7 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		if (m_prefs.getBoolean("sort_feeds_by_unread", false)) {
 			cmp = new FeedUnreadComparator();
 		} else {
-			if (m_onlineServices.getApiLevel() >= 3) {
+			if (m_activity.getApiLevel() >= 3) {
 				cmp = new FeedOrderComparator();				
 			} else {
 				cmp = new FeedTitleComparator();
@@ -457,7 +550,12 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		}
 		
 		Collections.sort(m_feeds, cmp);
-		m_adapter.notifyDataSetInvalidated();
+		
+		try {
+			m_adapter.notifyDataSetInvalidated();
+		} catch (NullPointerException e) {
+			// adapter missing
+		}
 	}
 	
 	public class GetIconsTask extends AsyncTask<FeedList, Integer, Integer> {
@@ -472,13 +570,13 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		protected Integer doInBackground(FeedList... params) {
 
 			try {
-				File storage = Environment.getExternalStorageDirectory();
+				File storage = m_activity.getExternalCacheDir();
 				final File iconPath = new File(storage.getAbsolutePath() + ICON_PATH);
 				if (!iconPath.exists()) iconPath.mkdirs();
 			
 				if (iconPath.exists()) {
 					for (Feed feed : params[0])	 {
-						if (feed.id > 0 && feed.has_icon) {
+						if (feed.id > 0 && feed.has_icon && !feed.is_cat) {
 							File outputFile = new File(iconPath.getAbsolutePath() + "/" + feed.id + ".ico");
 							String fetchUrl = m_baseUrl + "/" + feed.id + ".ico";
 							
@@ -499,43 +597,24 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		protected void downloadFile(String fetchUrl, String outputFile) {
 			AndroidHttpClient client = AndroidHttpClient.newInstance("Tiny Tiny RSS");
 			
-			if (m_prefs.getBoolean("ssl_trust_any", false)) {
-				client.getConnectionManager().getSchemeRegistry().register(new Scheme("https", new EasySSLSocketFactory(), 443));
-			}
-
-			HttpGet httpGet = new HttpGet(fetchUrl);
-			HttpContext context = null;
-
-			String httpLogin = m_prefs.getString("http_login", "");
-			String httpPassword = m_prefs.getString("http_password", "");
+			/* ApiRequest.disableConnectionReuseIfNecessary(); */
 			
-			if (httpLogin.length() > 0) {
-
-				URL targetUrl;
-				try {
-					targetUrl = new URL(fetchUrl);
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-					client.close();
-					return;
-				}
-				
-				HttpHost targetHost = new HttpHost(targetUrl.getHost(), targetUrl.getPort(), targetUrl.getProtocol());
-				CredentialsProvider cp = new BasicCredentialsProvider();
-				context = new BasicHttpContext();
-				
-				cp.setCredentials(
-		                new AuthScope(targetHost.getHostName(), targetHost.getPort()),
-		                new UsernamePasswordCredentials(httpLogin, httpPassword));
-
-				context.setAttribute(ClientContext.CREDS_PROVIDER, cp);
-			}
-			
+			/* ApiRequest.trustAllHosts(m_prefs.getBoolean("ssl_trust_any", false),
+					m_prefs.getBoolean("ssl_trust_any_host", false)); */				
 
 			try {
-				HttpResponse execute = client.execute(httpGet, context);
+				URL url = new URL(fetchUrl);
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+				String httpLogin = m_prefs.getString("http_login", "");
+				String httpPassword = m_prefs.getString("http_password", "");
 				
-				InputStream content = execute.getEntity().getContent();
+				if (httpLogin.length() > 0) {
+					conn.setRequestProperty("Authorization", "Basic " + 
+						Base64.encodeToString((httpLogin + ":" + httpPassword).getBytes("UTF-8"), Base64.NO_WRAP)); 				
+				}
+
+				InputStream content = conn.getInputStream();
 
 				BufferedInputStream is = new BufferedInputStream(content, 1024);
 				FileOutputStream fos = new FileOutputStream(outputFile);
@@ -557,6 +636,8 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 		}
 		
 		protected void onPostExecute(Integer result) {
+			if (isDetached()) return;
+			
 			m_adapter.notifyDataSetInvalidated();
 		}
 		

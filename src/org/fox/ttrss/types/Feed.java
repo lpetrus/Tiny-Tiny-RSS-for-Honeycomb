@@ -24,6 +24,20 @@ public class Feed implements Comparable<Feed>, Parcelable {
 		readFromParcel(in);
 	}
 	
+	public Feed() {
+		
+	}
+	
+	public boolean equals(Feed feed) {
+		if (feed == this) 
+			return true;
+		
+		if (feed == null)
+			return false;
+		
+		return feed.id == this.id && (this.title == null || this.title.equals(feed.title)) && this.is_cat == feed.is_cat;
+	}
+	
 	@Override
 	public int compareTo(Feed feed) {
 		if (feed.unread != this.unread)
