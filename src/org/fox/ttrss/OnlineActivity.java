@@ -49,8 +49,6 @@ import com.google.gson.reflect.TypeToken;
 
 public class OnlineActivity extends CommonActivity {
 	private final String TAG = this.getClass().getSimpleName();
-
-	private final static int TRIAL_DAYS = 8;
 	
 	protected SharedPreferences m_prefs;
 	protected Menu m_menu;
@@ -163,8 +161,6 @@ public class OnlineActivity extends CommonActivity {
 		if (isOffline) {
 			switchOfflineSuccess();			
 		} else {
-			checkTrial(false);
-			
 			/* if (getIntent().getExtras() != null) {
 				Intent i = getIntent();
 			} */
@@ -447,64 +443,6 @@ public class OnlineActivity extends CommonActivity {
 		finish();
 	}
 	
-	public void checkTrial(boolean notify) {
-		boolean isTrial = getPackageManager().checkSignatures(
-				getPackageName(), "org.fox.ttrss.key") != PackageManager.SIGNATURE_MATCH;
-
-		if (isTrial) {
-			long firstStart = m_prefs.getLong("date_firstlaunch_trial", -1);
-			
-			if (firstStart == -1) {
-				firstStart = System.currentTimeMillis();
-				
-				SharedPreferences.Editor editor = m_prefs.edit();
-				editor.putLong("date_firstlaunch_trial", firstStart);
-				editor.commit();
-			}
-			
-			if (!notify && System.currentTimeMillis() > firstStart + (TRIAL_DAYS * 24 * 60 * 60 * 1000)) {
-				
-				AlertDialog.Builder builder = new AlertDialog.Builder(this)
-				.setTitle(R.string.trial_expired)
-				.setMessage(R.string.trial_expired_message)
-				.setCancelable(false)
-				.setPositiveButton(getString(R.string.trial_purchase),
-						new OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								
-								openUnlockUrl();								
-								finish();
-
-							}
-						})
-				.setNegativeButton(getString(R.string.cancel),
-						new OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog,
-									int which) {
-								
-								finish();
-
-							}
-						});
-		
-				AlertDialog dialog = builder.create();
-				dialog.show();
-				
-			} else {
-				long daysLeft = Math.round((firstStart + (TRIAL_DAYS * 24 * 60 * 60 * 1000) - System.currentTimeMillis()) / (24 * 60 * 60 * 1000));
-				
-				if (notify) {
-					toast(getString(R.string.trial_mode_prompt, Long.valueOf(daysLeft)));
-				}
-			}
-		} else if (notify) {
-			toast(R.string.trial_thanks);
-		}
-	}
-	
 	private void openUnlockUrl() {
 		try {
 			Intent intent = new Intent(Intent.ACTION_VIEW, 
@@ -530,11 +468,6 @@ public class OnlineActivity extends CommonActivity {
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			finish();
-			return true;
-		case R.id.donate:
-			if (true) {
-				openUnlockUrl();
-			}
 			return true;
 		case R.id.logout:
 			logout();
@@ -951,17 +884,6 @@ public class OnlineActivity extends CommonActivity {
 		m_menu = menu;
 
 		initMenu();
-		
-		List<PackageInfo> pkgs = getPackageManager()
-				.getInstalledPackages(0);
-
-		for (PackageInfo p : pkgs) {
-			if ("org.fox.ttrss.key".equals(p.packageName)) {
-				Log.d(TAG, "license apk found");
-				menu.findItem(R.id.donate).setVisible(false);
-				break;
-			}
-		}
 		
 		return true;
 	}
