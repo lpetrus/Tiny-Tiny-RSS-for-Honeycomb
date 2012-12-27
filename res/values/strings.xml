@@ -16,7 +16,7 @@
     <string name="pref_theme_long">Changes color theme of the application</string>
     <string name="ttrss_url">Tiny Tiny RSS URL</string>
     <string name="theme_dark">Dark</string>
-    <string name="preferences">Preferences</string>
+    <string name="preferences">Settings</string>
     <string name="theme_light">Light</string>
     <string name="connection">Connection</string>
     <string name="headline_context_multiple">Selected articles</string>
@@ -52,7 +52,7 @@
     <string name="http_login_summary">Optional. Fill this if your tt-rss installation is protected by HTTP Basic authentication</string>
     <string name="login_summary">Your tt-rss login. Not needed for single user mode</string>
     <string name="ttrss_url_summary">URL of your tt-rss installation directory, e.g. http://site.com/tt-rss/</string>
-    <string name="download_feed_icons">Download and display feed icons</string>
+    <string name="download_feed_icons">Enable feed icons</string>
     <string name="enable_cats">Enable feed categories</string>
     <string name="no_feeds_to_display">No feeds to display</string>
     <string name="no_headlines_to_display">No headlines to display</string>
@@ -69,7 +69,7 @@
     <string name="error_parse_error">Error: JSON parse failed</string>
     <string name="error_io_error">Error: I/O failure (server down?)</string>
     <string name="error_other_error">Error: unknown error (see log)</string>
-    <string name="error_api_disabled">Error: Please enable external API access in tt-rss Preferences - Advanced</string>
+    <string name="error_api_disabled">Error: Please enable external API access in tt-rss Settings - Advanced</string>
     <string name="error_api_unknown">Error: unknown API error (see log)</string>
     <string name="error_api_incorrect_usage">Error: incorrect API usage</string>
     <string name="error_login_failed">Error: username or password incorrect</string>
@@ -121,7 +121,7 @@
     <string name="article_set_note">Publish with note</string>
     <string name="close_feed">Close feed</string>
     <string name="close_article">Close article</string>
-    <string name="dialog_open_preferences">Open preferences</string>
+    <string name="dialog_open_preferences">Settings</string>
     <string name="dialog_need_configure_prompt">Please fill in your tt-rss server information such as URL, login, and password.</string>
     <string name="notify_article_marked">Article starred</string>
     <string name="notify_article_unmarked">Article unstarred</string>
@@ -144,6 +144,12 @@
     <string name="ssl">SSL</string>
     <string name="error_ssl_hostname_rejected">Error: SSL hostname not verified</string>
     <string name="offline_oldest_first">Show oldest articles first</string>
-    <string name="prefs_dim_status_bar">Dim status bar when reading</string>
+    <string name="prefs_dim_status_bar">Dim status bar</string>
+    <string name="prefs_dim_status_bar_long">Dim status bar when reading</string>
     <string name="article_comments">%1$d comments</string>
+    <string name="trial_mode_prompt">Trial mode, %1$d day(s) left.</string>
+    <string name="trial_purchase">Unlock full version</string>
+    <string name="trial_expired">Trial expired</string>
+    <string name="trial_expired_message">To continue using Tiny Tiny RSS please unlock the full version by purchasing the key.</string>
+    <string name="trial_thanks">Full version, thank you for support!</string>
 </resources>

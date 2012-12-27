@@ -1,13 +1,16 @@
 package org.fox.ttrss;
 
+import java.util.List;
+
 import org.fox.ttrss.util.DatabaseHelper;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.DisplayMetrics;
-import android.util.FloatMath;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;

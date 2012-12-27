@@ -10,6 +10,7 @@ import org.fox.ttrss.util.HeadlinesRequest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.os.BadParcelableException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -96,6 +97,8 @@ public class ArticlePager extends Fragment {
 		
 		m_listener.onArticleSelected(m_article, false);
 		
+		m_activity.setProgressBarVisibility(true);
+		
 		pager.setAdapter(m_adapter);
 		pager.setCurrentItem(position);
 		pager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -124,7 +127,7 @@ public class ArticlePager extends Fragment {
 					
 					//Log.d(TAG, "Page #" + position + "/" + m_adapter.getCount());
 					
-					if (m_activity.isSmallScreen() && position == m_adapter.getCount() - 5) {
+					if ((m_activity.isSmallScreen() || m_activity.isPortrait()) && position == m_adapter.getCount() - 5) {
 						Log.d(TAG, "loading more articles...");
 						refresh(true);
 					}
@@ -159,8 +162,14 @@ public class ArticlePager extends Fragment {
 
 				super.onPostExecute(result);
 				
-				if (result != null) {				
-					m_adapter.notifyDataSetChanged();
+				if (result != null) {
+					try {
+						m_adapter.notifyDataSetChanged();
+					} catch (BadParcelableException e) {
+						if (getActivity() != null) {							
+							getActivity().finish();
+						}
+					}
 					
 					if (m_article.id == 0 || m_articles.indexOf(m_article) == -1) {
 						if (m_articles.size() > 0) {

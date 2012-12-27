@@ -3,6 +3,7 @@ package org.fox.ttrss.util;
 // From http://androidsnippets.com/prompt-engaged-users-to-rate-your-app-in-the-android-market-appirater
 
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,6 +23,7 @@ public class AppRater {
     
     public static void appLaunched(Context mContext) {
         SharedPreferences prefs = mContext.getSharedPreferences("apprater", 0);
+
         if (prefs.getBoolean("dontshowagain", false)) { return ; }
         
         SharedPreferences.Editor editor = prefs.edit();
@@ -38,13 +40,13 @@ public class AppRater {
         }
         
         // Wait at least n days before opening
-        if (launch_count >= LAUNCHES_UNTIL_PROMPT) {
-            if (System.currentTimeMillis() >= date_firstLaunch + 
-                    (DAYS_UNTIL_PROMPT * 24 * 60 * 60 * 1000)) {
-                showRateDialog(mContext, editor);
-            }
+        if (launch_count >= LAUNCHES_UNTIL_PROMPT && 
+        		!prefs.getBoolean("dontshowagain", false) && 
+        		System.currentTimeMillis() >= date_firstLaunch + (DAYS_UNTIL_PROMPT * 24 * 60 * 60 * 1000)) {
+
+        	showRateDialog(mContext, editor);
         }
-        
+
         editor.commit();
     }   
     
@@ -65,7 +67,11 @@ public class AppRater {
         b1.setText("Rate " + APP_TITLE);
         b1.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + APP_PNAME)));
+            	try {
+            		mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + APP_PNAME)));
+            	} catch (ActivityNotFoundException e) {
+            		mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + APP_PNAME)));
+            	}
                 dialog.dismiss();
             }
         });        

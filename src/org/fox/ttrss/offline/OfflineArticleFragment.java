@@ -3,6 +3,8 @@ package org.fox.ttrss.offline;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.fox.ttrss.ArticlePager;
+import org.fox.ttrss.CommonActivity;
 import org.fox.ttrss.R;
 import org.fox.ttrss.util.ImageCacheService;
 import org.jsoup.Jsoup;
@@ -21,24 +23,24 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.support.v4.app.Fragment;
-import android.text.Html;
-import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.View.OnClickListener;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.widget.TextView;
+import android.view.GestureDetector;
 
-public class OfflineArticleFragment extends Fragment {
+public class OfflineArticleFragment extends Fragment implements GestureDetector.OnDoubleTapListener {
 	private final String TAG = this.getClass().getSimpleName();
 
 	private SharedPreferences m_prefs;
@@ -46,6 +48,7 @@ public class OfflineArticleFragment extends Fragment {
 	private boolean m_isCat = false; // FIXME use
 	private Cursor m_cursor;
 	private OfflineActivity m_activity;
+	private GestureDetector m_detector;
 	
 	public OfflineArticleFragment() {
 		super();
@@ -163,12 +166,19 @@ public class OfflineArticleFragment extends Fragment {
 	                }
 				});
 				
+				web.setOnTouchListener(new View.OnTouchListener() {
+					@Override
+					public boolean onTouch(View v, MotionEvent event) {
+						return m_detector.onTouchEvent(event);
+					}
+				});
+				
 				String content;
 				String cssOverride = "";
 				
 				WebSettings ws = web.getSettings();
 				ws.setSupportZoom(true);
-				ws.setBuiltInZoomControls(true);
+				ws.setBuiltInZoomControls(false);
 				
 				web.getSettings().setLayoutAlgorithm(LayoutAlgorithm.SINGLE_COLUMN);
 
@@ -299,6 +309,101 @@ public class OfflineArticleFragment extends Fragment {
 		m_prefs = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
 		m_activity = (OfflineActivity) activity;
+		
+		m_detector = new GestureDetector(m_activity, new GestureDetector.OnGestureListener() {			
+			@Override
+			public boolean onSingleTapUp(MotionEvent e) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public void onShowPress(MotionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
+					float distanceY) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public void onLongPress(MotionEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+					float velocityY) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			
+			@Override
+			public boolean onDown(MotionEvent e) {
+				// TODO Auto-generated method stub
+				return false;
+			}
+		});
+		
+		m_detector.setOnDoubleTapListener(this);
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent arg0) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent arg0) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private void onLeftSideTapped() {
+		OfflineArticlePager ap = (OfflineArticlePager) m_activity.getSupportFragmentManager().findFragmentByTag(CommonActivity.FRAG_ARTICLE);
+		
+		if (ap != null && ap.isAdded()) {
+			ap.selectArticle(false);
+		}
+	}
+	
+	private void onRightSideTapped() {
+		OfflineArticlePager ap = (OfflineArticlePager) m_activity.getSupportFragmentManager().findFragmentByTag(CommonActivity.FRAG_ARTICLE);
+		
+		if (ap != null && ap.isAdded()) {
+			ap.selectArticle(true);
+		}
+	}
+	
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent e) {
+		
+		int width = getView().getWidth();		
+		int x = Math.round(e.getX());
+		
+		if (x <= width/15) {
+			onLeftSideTapped();
+			return true;
+		} else if (x >= width-(width/15)) {
+			onRightSideTapped();
+			return true;
+		} /* else if (!m_activity.isCompatMode()) {
+			ActionBar bar = m_activity.getActionBar();
+			
+			if (bar.isShowing()) {
+				bar.hide();
+			} else {
+				bar.show();
+			}
+		} */
+		
+		return false;
 	}
 
 

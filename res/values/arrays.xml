@@ -17,7 +17,7 @@
         <item>1</item>
         <item>2</item>
     </string-array>
-    <string-array name="pref_view_mode_names">
+   <string-array name="pref_view_mode_names">
         <item>@string/category_browse_headlines</item>
         <item>@string/category_browse_articles</item>
     </string-array>
@@ -25,5 +25,9 @@
         <item>HEADLINES</item>
         <item>ARTICLES</item>
     </string-array>
-    
+    <string-array name="pref_offline_amounts">
+        <item>150</item>
+        <item>250</item>
+        <item>500</item>
+    </string-array>    
 </resources>
