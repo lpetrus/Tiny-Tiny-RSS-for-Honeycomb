@@ -1,7 +1,8 @@
 package org.fox.ttrss.offline;
 
 import org.fox.ttrss.GlobalState;
-import org.fox.ttrss.R;
+
+import sk.petrus.ttrss.R;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;

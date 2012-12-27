@@ -11,8 +11,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 import org.fox.ttrss.OnlineActivity;
-import org.fox.ttrss.R;
 import org.fox.ttrss.offline.OfflineDownloadService;
+
+import sk.petrus.ttrss.R;
 
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;

@@ -16,6 +16,8 @@ import org.fox.ttrss.types.Feed;
 import org.fox.ttrss.util.HeadlinesRequest;
 import org.jsoup.Jsoup;
 
+import sk.petrus.ttrss.R;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;

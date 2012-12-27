@@ -1,6 +1,6 @@
 package org.fox.ttrss.offline;
 
-import org.fox.ttrss.R;
+import sk.petrus.ttrss.R;
 
 import android.app.Activity;
 import android.content.Context;

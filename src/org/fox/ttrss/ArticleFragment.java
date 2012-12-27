@@ -13,6 +13,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import sk.petrus.ttrss.R;
+
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;

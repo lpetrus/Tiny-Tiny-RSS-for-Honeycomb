@@ -2,7 +2,8 @@ package org.fox.ttrss.offline;
 
 import org.fox.ttrss.CommonActivity;
 import org.fox.ttrss.PreferencesActivity;
-import org.fox.ttrss.R;
+
+import sk.petrus.ttrss.R;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;

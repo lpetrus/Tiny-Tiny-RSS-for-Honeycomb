@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.fox.ttrss.ApiRequest;
 import org.fox.ttrss.OnlineActivity;
-import org.fox.ttrss.R;
 import org.fox.ttrss.types.Article;
 import org.fox.ttrss.types.Feed;
 import org.fox.ttrss.types.FeedCategory;
@@ -16,6 +15,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import sk.petrus.ttrss.R;
 
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;

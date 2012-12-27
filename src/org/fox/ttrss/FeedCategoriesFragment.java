@@ -11,6 +11,8 @@ import org.fox.ttrss.types.Feed;
 import org.fox.ttrss.types.FeedCategory;
 import org.fox.ttrss.types.FeedCategoryList;
 
+import sk.petrus.ttrss.R;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;

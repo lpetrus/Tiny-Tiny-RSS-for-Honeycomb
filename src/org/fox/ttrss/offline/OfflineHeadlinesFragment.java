@@ -6,8 +6,9 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import org.fox.ttrss.GlobalState;
-import org.fox.ttrss.R;
 import org.jsoup.Jsoup;
+
+import sk.petrus.ttrss.R;
 
 import android.app.Activity;
 import android.content.Context;

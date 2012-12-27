@@ -6,9 +6,10 @@ import java.util.List;
 import org.fox.ttrss.ApiRequest;
 import org.fox.ttrss.GlobalState;
 import org.fox.ttrss.OnlineActivity;
-import org.fox.ttrss.R;
 import org.fox.ttrss.types.Article;
 import org.fox.ttrss.types.ArticleList;
+
+import sk.petrus.ttrss.R;
 
 import android.content.Context;
 

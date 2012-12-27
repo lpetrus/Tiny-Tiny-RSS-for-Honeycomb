@@ -1,5 +1,6 @@
 package org.fox.ttrss;
 
+import sk.petrus.ttrss.R;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 

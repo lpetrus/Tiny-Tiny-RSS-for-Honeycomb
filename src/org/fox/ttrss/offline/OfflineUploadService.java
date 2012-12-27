@@ -4,8 +4,9 @@ import java.util.HashMap;
 
 import org.fox.ttrss.ApiRequest;
 import org.fox.ttrss.OnlineActivity;
-import org.fox.ttrss.R;
 import org.fox.ttrss.util.DatabaseHelper;
+
+import sk.petrus.ttrss.R;
 
 import android.app.IntentService;
 import android.app.Notification;

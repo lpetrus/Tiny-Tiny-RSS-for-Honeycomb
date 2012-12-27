@@ -8,6 +8,8 @@ import org.fox.ttrss.types.Feed;
 import org.fox.ttrss.types.FeedCategory;
 import org.fox.ttrss.util.AppRater;
 
+import sk.petrus.ttrss.R;
+
 import android.view.ViewGroup;
 import android.animation.LayoutTransition;
 import android.annotation.SuppressLint;

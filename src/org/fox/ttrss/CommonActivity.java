@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.fox.ttrss.util.DatabaseHelper;
 
+import sk.petrus.ttrss.R;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;

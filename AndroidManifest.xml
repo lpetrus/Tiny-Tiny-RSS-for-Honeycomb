@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.fox.ttrss"
+    package="sk.petrus.ttrss"
     android:versionCode="123"
     android:versionName="1.1" >
 
@@ -13,14 +13,14 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name=".GlobalState"
+        android:name="org.fox.ttrss.GlobalState"
         android:allowBackup="true"
-        android:backupAgent=".util.PrefsBackupAgent"
+        android:backupAgent="org.fox.ttrss.util.PrefsBackupAgent"
         android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
         android:label="@string/app_name" >
         <activity
-            android:name=".OnlineActivity"
+            android:name="org.fox.ttrss.OnlineActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,48 +29,48 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PreferencesActivity"
+            android:name="org.fox.ttrss.PreferencesActivity"
             android:label="@string/preferences" >
         </activity>
 
         <activity
-            android:name=".FeedsActivity"
+            android:name="org.fox.ttrss.FeedsActivity"
             android:label="@string/app_name" >
         </activity>
 
         <activity
-            android:name=".HeadlinesActivity"
+            android:name="org.fox.ttrss.HeadlinesActivity"
             android:label="@string/app_name" >
         </activity>
 
         <activity
-            android:name=".CommonActivity"
+            android:name="org.fox.ttrss.CommonActivity"
             android:label="@string/app_name" >
         </activity>
 
         <activity
-            android:name=".offline.OfflineActivity"
+            android:name="org.fox.ttrss.offline.OfflineActivity"
             android:label="@string/app_name" >
         </activity>
 
         <activity
-            android:name=".offline.OfflineFeedsActivity"
+            android:name="org.fox.ttrss.offline.OfflineFeedsActivity"
             android:label="@string/app_name" >
         </activity>
 
         <activity
-            android:name=".offline.OfflineHeadlinesActivity"
+            android:name="org.fox.ttrss.offline.OfflineHeadlinesActivity"
             android:label="@string/app_name" >
         </activity>
         
         <service
-            android:name=".offline.OfflineDownloadService"
+            android:name="org.fox.ttrss.offline.OfflineDownloadService"
             android:enabled="true" />
         <service
-            android:name=".offline.OfflineUploadService"
+            android:name="org.fox.ttrss.offline.OfflineUploadService"
             android:enabled="true" />
         <service
-            android:name=".util.ImageCacheService"
+            android:name="org.fox.ttrss.util.ImageCacheService"
             android:enabled="true" />
 
         <meta-data
