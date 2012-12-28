@@ -16,7 +16,7 @@ import android.widget.TextView;
 
 public class AppRater {
     private final static String APP_TITLE = "Tiny Tiny RSS";
-    private final static String APP_PNAME = "org.fox.ttrss";
+    private final static String APP_PNAME = "sk.petrus.ttrss";
     
     private final static int DAYS_UNTIL_PROMPT = 3;
     private final static int LAUNCHES_UNTIL_PROMPT = 7;
