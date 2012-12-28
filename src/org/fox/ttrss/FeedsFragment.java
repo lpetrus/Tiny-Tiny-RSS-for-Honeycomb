@@ -115,7 +115,7 @@ public class FeedsFragment extends Fragment implements OnItemClickListener, OnSh
 					return -1;
 				else if (!a.is_cat && b.is_cat) 
 					return 1;
-				else if (a.order_id != 0 && b.order_id != 0)
+				else if (a.order_id != 0 || b.order_id != 0)
 					return a.order_id - b.order_id;
 				else
 					return a.title.compareTo(b.title);
